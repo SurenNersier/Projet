@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chroniques d’Arménie — Carte & Quiz</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#111a2e;
+      --panel2:#0f172a;
+      --text:#e5e7eb;
+      --muted:#a5b4fc;
+      --line:rgba(255,255,255,.08);
+      --good:#22c55e;
+      --bad:#ef4444;
+      --btn:#1f2a44;
+      --btn2:#223455;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:18px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% 10%, rgba(99,102,241,.22), transparent 60%),
+                  radial-gradient(900px 500px at 80% 30%, rgba(34,197,94,.18), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+    }
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:18px 18px 10px;
+      max-width:1100px;
+      margin:0 auto;
+    }
+    .brand{
+      display:flex; gap:12px; align-items:center;
+    }
+    .logo{
+      width:42px; height:42px; border-radius:14px;
+      background: linear-gradient(135deg, rgba(99,102,241,1), rgba(34,197,94,1));
+      box-shadow: var(--shadow);
+    }
+    h1{ font-size:18px; margin:0; letter-spacing:.2px; }
+    .sub{ color: rgba(229,231,235,.75); font-size:12px; margin-top:2px; }
+    .topbar{
+      display:flex; gap:10px; align-items:center;
+      color:rgba(229,231,235,.85);
+      font-size:13px;
+    }
+    .pill{
+      padding:8px 12px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background: rgba(17,26,46,.65);
+      backdrop-filter: blur(8px);
+    }
+    .btn{
+      cursor:pointer;
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, var(--btn), var(--btn2));
+      color:var(--text);
+      padding:8px 12px;
+      border-radius:12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.25);
+      font-weight:600;
+    }
+    .btn:active{ transform: translateY(1px); }
+    main{
+      max-width:1100px;
+      margin:0 auto;
+      padding: 10px 18px 26px;
+    }
+
+    /* MAP */
+    .mapTitle{
+      margin:10px 0 14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:10px;
+    }
+    .mapTitle h2{ margin:0; font-size:18px; }
+    .mapTitle p{ margin:0; color:rgba(229,231,235,.7); font-size:13px; }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap:14px;
+    }
+    .card{
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      overflow:hidden;
+      background: rgba(17,26,46,.75);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      cursor:pointer;
+      transition: transform .12s ease, border-color .12s ease;
+      position:relative;
+      min-height:168px;
+    }
+    .card:hover{
+      transform: translateY(-2px);
+      border-color: rgba(165,180,252,.35);
+    }
+    .thumb{
+      height:92px;
+      background-size: cover;
+      background-position:center;
+      position:relative;
+    }
+    .thumb::after{
+      content:"";
+      position:absolute; inset:0;
+      background: linear-gradient(180deg, rgba(0,0,0,.15), rgba(17,26,46,.9));
+    }
+    .cardBody{
+      padding:12px 12px 14px;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      justify-content:space-between;
+    }
+    .title{
+      font-weight:800;
+      font-size:14px;
+      margin:0 0 6px;
+    }
+    .desc{
+      margin:0;
+      font-size:13px;
+      color:rgba(229,231,235,.72);
+      line-height:1.35;
+    }
+    .badge{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(15,23,42,.8);
+      color: rgba(229,231,235,.85);
+      white-space:nowrap;
+      height:fit-content;
+    }
+    .badge.ok{ border-color: rgba(34,197,94,.35); color: rgba(34,197,94,.95); }
+    .badge.todo{ border-color: rgba(99,102,241,.35); color: rgba(165,180,252,.95); }
+
+    /* MODAL */
+    .overlay{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index:999;
+    }
+    .modal{
+      width:min(860px, 100%);
+      border-radius: 22px;
+      border:1px solid var(--line);
+      background: rgba(17,26,46,.92);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 18px 60px rgba(0,0,0,.5);
+      overflow:hidden;
+    }
+    .modalHead{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+    }
+    .modalHead h3{ margin:0; font-size:16px; }
+    .modalHead .meta{ color:rgba(229,231,235,.7); font-size:12px; margin-top:4px; }
+    .close{
+      border:1px solid var(--line);
+      background: rgba(15,23,42,.6);
+      color:var(--text);
+      border-radius:12px;
+      padding:8px 10px;
+      cursor:pointer;
+      font-weight:700;
+    }
+    .modalContent{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:0;
+      min-height:420px;
+    }
+    @media (max-width: 860px){
+      .modalContent{ grid-template-columns: 1fr; }
+    }
+    .story{
+      padding:16px;
+      border-right:1px solid var(--line);
+    }
+    @media (max-width: 860px){
+      .story{ border-right:none; border-bottom:1px solid var(--line); }
+    }
+    .storyBox{
+      border:1px solid var(--line);
+      border-radius: 18px;
+      padding:14px;
+      background: rgba(15,23,42,.55);
+    }
+    .storyBox p{ margin:0; line-height:1.55; color:rgba(229,231,235,.85); }
+    .hint{
+      margin-top:10px;
+      font-size:12px;
+      color:rgba(165,180,252,.95);
+    }
+
+    .quiz{
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .qTitle{ margin:0; font-size:14px; font-weight:900; }
+    .qText{ margin:0; color:rgba(229,231,235,.85); line-height:1.45; }
+    .choices{ display:grid; gap:10px; margin-top:6px; }
+    .choice{
+      text-align:left;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(15,23,42,.55);
+      color:var(--text);
+      cursor:pointer;
+      transition: transform .06s ease, border-color .12s ease;
+      font-weight:700;
+    }
+    .choice:hover{ border-color: rgba(165,180,252,.35); }
+    .choice:active{ transform: translateY(1px); }
+    .choice.good{ border-color: rgba(34,197,94,.45); box-shadow: 0 0 0 2px rgba(34,197,94,.10) inset; }
+    .choice.bad{ border-color: rgba(239,68,68,.45); box-shadow: 0 0 0 2px rgba(239,68,68,.10) inset; }
+    .feedback{
+      font-size:13px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(15,23,42,.45);
+      color:rgba(229,231,235,.88);
+      display:none;
+    }
+    .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-top:auto;
+      border-top:1px solid var(--line);
+      padding-top:12px;
+    }
+    .tiny{
+      font-size:12px;
+      color:rgba(229,231,235,.7);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>Chroniques d’Arménie — Carte & Quiz</h1>
+        <div class="sub">Prototype éducatif : histoire + vocabulaire + mise en situation</div>
+      </div>
+    </div>
+    <div class="topbar">
+      <div class="pill">⭐ Points : <span id="points">0</span></div>
+      <button class="btn" id="resetBtn">Réinitialiser</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="mapTitle">
+      <div>
+        <h2>Carte des missions</h2>
+        <p>Clique une carte → petite histoire → questions → tu gagnes des points.</p>
+      </div>
+      <div class="pill">Progression : <span id="progress">0/0</span></div>
+    </div>
+
+    <section class="grid" id="grid"></section>
+  </main>
+
+  <!-- MODAL -->
+  <div class="overlay" id="overlay" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modalHead">
+        <div>
+          <h3 id="lessonTitle">Mission</h3>
+          <div class="meta" id="lessonMeta"></div>
+        </div>
+        <button class="close" id="closeBtn">✕</button>
+      </div>
+
+      <div class="modalContent">
+        <div class="story">
+          <div class="storyBox">
+            <p id="storyText"></p>
+          </div>
+          <div class="hint" id="hintText"></div>
+        </div>
+
+        <div class="quiz">
+          <p class="qTitle" id="qTitle">Question</p>
+          <p class="qText" id="qText"></p>
+          <div class="choices" id="choices"></div>
+          <div class="feedback" id="feedback"></div>
+
+          <div class="row">
+            <div class="tiny" id="qCounter">Question 1/1</div>
+            <button class="btn" id="nextBtn" disabled>Suivant</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==== Données (tu peux en ajouter autant que tu veux) ====
+    // Astuce images: ici je mets des "images" en dégradé (thumbGradient).
+    // Plus tard tu peux remplacer par: thumbUrl: "images/monastere.jpg"
+    const LESSONS = [
+      {
+        id: "alphabet",
+        title: "Le scriptorium : l’alphabet",
+        era: "Ve siècle",
+        place: "Atelier de manuscrits",
+        thumbGradient: "linear-gradient(135deg, rgba(99,102,241,.9), rgba(17,26,46,0))",
+        story: "Tu entres dans un scriptorium. Un scribe te salue : « Բարև » (Barev). Il te montre une page et te demande d’aider à reconnaître des mots simples.",
+        hint: "Objectif : 2 mots de base + 1 repère historique.",
+        questions: [
+          {
+            type: "mcq",
+            title: "Vocabulaire",
+            text: "Que signifie « Բարև » (Barev) ?",
+            choices: ["Merci", "Bonjour", "Au revoir"],
+            answerIndex: 1,
+            explain: "« Բարև » se traduit souvent par “bonjour”."
+          },
+          {
+            type: "mcq",
+            title: "Vocabulaire",
+            text: "Quel mot signifie “livre” en arménien (translittération) ?",
+            choices: ["girk (գիրք)", "jur (ջուր)", "tun (տուն)"],
+            answerIndex: 0,
+            explain: "« գիրք » (girk) = livre. « ջուր » = eau. « տուն » = maison."
+          },
+          {
+            type: "mcq",
+            title: "Histoire",
+            text: "À quel siècle l’alphabet arménien est-il traditionnellement attribué (Mesrop Machtots) ?",
+            choices: ["Ve siècle", "XVe siècle", "Ie siècle"],
+            answerIndex: 0,
+            explain: "Traditionnellement, l’alphabet est attribué au Ve siècle."
+          }
+        ]
+      },
+      {
+        id: "market",
+        title: "Le marché : dialogue simple",
+        era: "Mise en situation",
+        place: "Marché (scène fictive)",
+        thumbGradient: "linear-gradient(135deg, rgba(34,197,94,.9), rgba(17,26,46,0))",
+        story: "Au marché, tu veux acheter de l’eau. Le vendeur te montre 3 étiquettes. Tu dois choisir la bonne et répondre poliment.",
+        hint: "Objectif : comprendre 1 mot + choisir une réponse logique.",
+        questions: [
+          {
+            type: "mcq",
+            title: "Vocabulaire",
+            text: "Quel mot veut dire “eau” ?",
+            choices: ["jur (ջուր)", "girk (գիրք)", "arev (արև)"],
+            answerIndex: 0,
+            explain: "« ջուր » (jur) = eau. « արև » (arev) = soleil."
+          },
+          {
+            type: "mcq",
+            title: "Mise en situation",
+            text: "Le vendeur te dit “Barev”. Quelle réponse est la plus logique ?",
+            choices: ["Barev", "Girk", "Jur"],
+            answerIndex: 0,
+            explain: "Si on te dit bonjour, répondre « Barev » est logique."
+          }
+        ]
+      },
+      {
+        id: "map",
+        title: "Carte & lieux",
+        era: "Repères",
+        place: "Carte stylisée",
+        thumbGradient: "linear-gradient(135deg, rgba(245,158,11,.9), rgba(17,26,46,0))",
+        story: "Tu ouvres une carte. Le guide te demande de reconnaître un lieu très connu : la capitale actuelle.",
+        hint: "Objectif : 1 repère géographique + 1 mot.",
+        questions: [
+          {
+            type: "mcq",
+            title: "Géographie",
+            text: "Quelle est la capitale actuelle de l’Arménie ?",
+            choices: ["Gyumri", "Erevan (Yerevan)", "Van"],
+            answerIndex: 1,
+            explain: "La capitale est Erevan (Yerevan)."
+          },
+          {
+            type: "mcq",
+            title: "Vocabulaire",
+            text: "« տուն » (tun) signifie…",
+            choices: ["maison", "pain", "route"],
+            answerIndex: 0,
+            explain: "« տուն » (tun) = maison."
+          }
+        ]
+      }
+    ];
+
+    // ==== État + stockage ====
+    const storeKey = "armenia_quiz_v1";
+    const state = loadState();
+
+    function loadState(){
+      try{
+        const raw = localStorage.getItem(storeKey);
+        if(!raw) return { points: 0, done: {}, last: null };
+        const parsed = JSON.parse(raw);
+        return { points: parsed.points ?? 0, done: parsed.done ?? {}, last: parsed.last ?? null };
+      }catch{
+        return { points: 0, done: {}, last: null };
+      }
+    }
+    function saveState(){
+      localStorage.setItem(storeKey, JSON.stringify(state));
+      updateTopUI();
+      renderMap();
+    }
+
+    // ==== UI refs ====
+    const gridEl = document.getElementById("grid");
+    const pointsEl = document.getElementById("points");
+    const progressEl = document.getElementById("progress");
+    const overlay = document.getElementById("overlay");
+
+    const lessonTitleEl = document.getElementById("lessonTitle");
+    const lessonMetaEl  = document.getElementById("lessonMeta");
+    const storyTextEl   = document.getElementById("storyText");
+    const hintTextEl    = document.getElementById("hintText");
+
+    const qTitleEl   = document.getElementById("qTitle");
+    const qTextEl    = document.getElementById("qText");
+    const choicesEl  = document.getElementById("choices");
+    const feedbackEl = document.getElementById("feedback");
+    const qCounterEl = document.getElementById("qCounter");
+
+    const nextBtn  = document.getElementById("nextBtn");
+    const closeBtn = document.getElementById("closeBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    // ==== Modal session ====
+    let currentLesson = null;
+    let qIndex = 0;
+    let locked = false;
+
+    function updateTopUI(){
+      pointsEl.textContent = String(state.points);
+      const doneCount = Object.keys(state.done).filter(k => state.done[k]).length;
+      progressEl.textContent = `${doneCount}/${LESSONS.length}`;
+    }
+
+    function renderMap(){
+      gridEl.innerHTML = "";
+      LESSONS.forEach(lesson => {
+        const isDone = !!state.done[lesson.id];
+
+        const card = document.createElement("article");
+        card.className = "card";
+        card.tabIndex = 0;
+        card.addEventListener("click", () => openLesson(lesson.id));
+        card.addEventListener("keydown", (e) => {
+          if(e.key === "Enter" || e.key === " ") openLesson(lesson.id);
+        });
+
+        const thumb = document.createElement("div");
+        thumb.className = "thumb";
+        thumb.style.backgroundImage = lesson.thumbUrl
+          ? `url('${lesson.thumbUrl}')`
+          : lesson.thumbGradient;
+
+        const body = document.createElement("div");
+        body.className = "cardBody";
+
+        const left = document.createElement("div");
+        left.style.minWidth = "0";
+
+        const t = document.createElement("p");
+        t.className = "title";
+        t.textContent = lesson.title;
+
+        const d = document.createElement("p");
+        d.className = "desc";
+        d.textContent = `${lesson.place} • ${lesson.era} • ${lesson.questions.length} questions`;
+
+        left.appendChild(t);
+        left.appendChild(d);
+
+        const badge = document.createElement("div");
+        badge.className = "badge " + (isDone ? "ok" : "todo");
+        badge.textContent = isDone ? "✅ Terminé" : "🎯 À faire";
+
+        body.appendChild(left);
+        body.appendChild(badge);
+
+        card.appendChild(thumb);
+        card.appendChild(body);
+        gridEl.appendChild(card);
+      });
+
+      updateTopUI();
+    }
+
+    function openLesson(id){
+      currentLesson = LESSONS.find(l => l.id === id);
+      if(!currentLesson) return;
+
+      qIndex = 0;
+      locked = false;
+
+      lessonTitleEl.textContent = currentLesson.title;
+      lessonMetaEl.textContent = `${currentLesson.place} • ${currentLesson.era}`;
+      storyTextEl.textContent = currentLesson.story;
+      hintTextEl.textContent = currentLesson.hint;
+
+      overlay.style.display = "flex";
+      renderQuestion();
+    }
+
+    function closeLesson(){
+      overlay.style.display = "none";
+      currentLesson = null;
+      qIndex = 0;
+      locked = false;
+      feedbackEl.style.display = "none";
+    }
+
+    function renderQuestion(){
+      const q = currentLesson.questions[qIndex];
+      qTitleEl.textContent = q.title;
+      qTextEl.textContent = q.text;
+
+      qCounterEl.textContent = `Question ${qIndex + 1}/${currentLesson.questions.length}`;
+
+      feedbackEl.style.display = "none";
+      feedbackEl.textContent = "";
+      choicesEl.innerHTML = "";
+      nextBtn.disabled = true;
+      locked = false;
+
+      q.choices.forEach((label, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "choice";
+        btn.textContent = label;
+        btn.addEventListener("click", () => choose(idx, btn));
+        choicesEl.appendChild(btn);
+      });
+    }
+
+    function choose(idx, btnEl){
+      if(locked) return;
+      locked = true;
+
+      const q = currentLesson.questions[qIndex];
+      const isGood = idx === q.answerIndex;
+
+      // marquer visuellement
+      [...choicesEl.children].forEach((el, i) => {
+        el.classList.add(i === q.answerIndex ? "good" : (i === idx ? "bad" : ""));
+        el.disabled = true;
+      });
+
+      if(isGood){
+        state.points += 10;
+        feedbackEl.textContent = "✅ Bonne réponse. " + q.explain;
+      }else{
+        feedbackEl.textContent = "❌ Pas tout à fait. " + q.explain;
+      }
+      feedbackEl.style.display = "block";
+
+      nextBtn.disabled = false;
+      saveState();
+    }
+
+    function next(){
+      if(!currentLesson) return;
+
+      qIndex++;
+      if(qIndex >= currentLesson.questions.length){
+        // fin de mission
+        state.done[currentLesson.id] = true;
+        state.points += 20; // bonus fin de mission
+        saveState();
+
+        qTitleEl.textContent = "Mission terminée 🎉";
+        qTextEl.textContent = "Bravo ! Tu as fini cette mission. Retourne sur la carte pour en choisir une autre.";
+        choicesEl.innerHTML = "";
+        feedbackEl.style.display = "block";
+        feedbackEl.textContent = "✅ Bonus +20 points pour la mission terminée.";
+        nextBtn.disabled = true;
+        return;
+      }
+
+      renderQuestion();
+    }
+
+    // ==== Events ====
+    nextBtn.addEventListener("click", next);
+    closeBtn.addEventListener("click", closeLesson);
+    overlay.addEventListener("click", (e) => { if(e.target === overlay) closeLesson(); });
+
+    resetBtn.addEventListener("click", () => {
+      if(confirm("Réinitialiser points + progression ?")){
+        localStorage.removeItem(storeKey);
+        state.points = 0;
+        state.done = {};
+        state.last = null;
+        renderMap();
+        updateTopUI();
+      }
+    });
+
+    // Init
+    renderMap();
+    updateTopUI();
+  </script>
+</body>
+</html>

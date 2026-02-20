@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="fr">
 <head>
@@ -37,9 +38,7 @@
       max-width:1100px;
       margin:0 auto;
     }
-    .brand{
-      display:flex; gap:12px; align-items:center;
-    }
+    .brand{ display:flex; gap:12px; align-items:center; }
     .logo{
       width:42px; height:42px; border-radius:14px;
       background: linear-gradient(135deg, rgba(99,102,241,1), rgba(34,197,94,1));
@@ -70,6 +69,12 @@
       font-weight:600;
     }
     .btn:active{ transform: translateY(1px); }
+    .btn:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+      transform:none;
+    }
+
     main{
       max-width:1100px;
       margin:0 auto;
@@ -103,10 +108,15 @@
       transition: transform .12s ease, border-color .12s ease;
       position:relative;
       min-height:168px;
+      outline: none;
     }
     .card:hover{
       transform: translateY(-2px);
       border-color: rgba(165,180,252,.35);
+    }
+    .card:focus{
+      border-color: rgba(165,180,252,.55);
+      box-shadow: 0 0 0 3px rgba(165,180,252,.12), var(--shadow);
     }
     .thumb{
       height:92px;
@@ -160,6 +170,9 @@
       padding:16px;
       z-index:999;
     }
+    /* ✅ IMPORTANT: on affiche l'overlay via une classe */
+    .overlay.show{ display:flex; }
+
     .modal{
       width:min(860px, 100%);
       border-radius: 22px;
@@ -239,8 +252,10 @@
     }
     .choice:hover{ border-color: rgba(165,180,252,.35); }
     .choice:active{ transform: translateY(1px); }
+    .choice:disabled{ cursor:not-allowed; opacity:.9; }
     .choice.good{ border-color: rgba(34,197,94,.45); box-shadow: 0 0 0 2px rgba(34,197,94,.10) inset; }
     .choice.bad{ border-color: rgba(239,68,68,.45); box-shadow: 0 0 0 2px rgba(239,68,68,.10) inset; }
+
     .feedback{
       font-size:13px;
       padding:10px 12px;
@@ -276,7 +291,7 @@
     </div>
     <div class="topbar">
       <div class="pill">⭐ Points : <span id="points">0</span></div>
-      <button class="btn" id="resetBtn">Réinitialiser</button>
+      <button class="btn" id="resetBtn" type="button">Réinitialiser</button>
     </div>
   </header>
 
@@ -300,7 +315,7 @@
           <h3 id="lessonTitle">Mission</h3>
           <div class="meta" id="lessonMeta"></div>
         </div>
-        <button class="close" id="closeBtn">✕</button>
+        <button class="close" id="closeBtn" type="button">✕</button>
       </div>
 
       <div class="modalContent">
@@ -319,7 +334,7 @@
 
           <div class="row">
             <div class="tiny" id="qCounter">Question 1/1</div>
-            <button class="btn" id="nextBtn" disabled>Suivant</button>
+            <button class="btn" id="nextBtn" type="button" disabled>Suivant</button>
           </div>
         </div>
       </div>
@@ -327,9 +342,7 @@
   </div>
 
   <script>
-    // ==== Données (tu peux en ajouter autant que tu veux) ====
-    // Astuce images: ici je mets des "images" en dégradé (thumbGradient).
-    // Plus tard tu peux remplacer par: thumbUrl: "images/monastere.jpg"
+    // ==== Données ====
     const LESSONS = [
       {
         id: "alphabet",
@@ -341,7 +354,6 @@
         hint: "Objectif : 2 mots de base + 1 repère historique.",
         questions: [
           {
-            type: "mcq",
             title: "Vocabulaire",
             text: "Que signifie « Բարև » (Barev) ?",
             choices: ["Merci", "Bonjour", "Au revoir"],
@@ -349,7 +361,6 @@
             explain: "« Բարև » se traduit souvent par “bonjour”."
           },
           {
-            type: "mcq",
             title: "Vocabulaire",
             text: "Quel mot signifie “livre” en arménien (translittération) ?",
             choices: ["girk (գիրք)", "jur (ջուր)", "tun (տուն)"],
@@ -357,7 +368,6 @@
             explain: "« գիրք » (girk) = livre. « ջուր » = eau. « տուն » = maison."
           },
           {
-            type: "mcq",
             title: "Histoire",
             text: "À quel siècle l’alphabet arménien est-il traditionnellement attribué (Mesrop Machtots) ?",
             choices: ["Ve siècle", "XVe siècle", "Ie siècle"],
@@ -376,7 +386,6 @@
         hint: "Objectif : comprendre 1 mot + choisir une réponse logique.",
         questions: [
           {
-            type: "mcq",
             title: "Vocabulaire",
             text: "Quel mot veut dire “eau” ?",
             choices: ["jur (ջուր)", "girk (գիրք)", "arev (արև)"],
@@ -384,7 +393,6 @@
             explain: "« ջուր » (jur) = eau. « արև » (arev) = soleil."
           },
           {
-            type: "mcq",
             title: "Mise en situation",
             text: "Le vendeur te dit “Barev”. Quelle réponse est la plus logique ?",
             choices: ["Barev", "Girk", "Jur"],
@@ -403,7 +411,6 @@
         hint: "Objectif : 1 repère géographique + 1 mot.",
         questions: [
           {
-            type: "mcq",
             title: "Géographie",
             text: "Quelle est la capitale actuelle de l’Arménie ?",
             choices: ["Gyumri", "Erevan (Yerevan)", "Van"],
@@ -411,7 +418,6 @@
             explain: "La capitale est Erevan (Yerevan)."
           },
           {
-            type: "mcq",
             title: "Vocabulaire",
             text: "« տուն » (tun) signifie…",
             choices: ["maison", "pain", "route"],
@@ -422,18 +428,18 @@
       }
     ];
 
-    // ==== État + stockage ====
+    // ==== Stockage ====
     const storeKey = "armenia_quiz_v1";
     const state = loadState();
 
     function loadState(){
       try{
         const raw = localStorage.getItem(storeKey);
-        if(!raw) return { points: 0, done: {}, last: null };
+        if(!raw) return { points: 0, done: {} };
         const parsed = JSON.parse(raw);
-        return { points: parsed.points ?? 0, done: parsed.done ?? {}, last: parsed.last ?? null };
+        return { points: parsed.points ?? 0, done: parsed.done ?? {} };
       }catch{
-        return { points: 0, done: {}, last: null };
+        return { points: 0, done: {} };
       }
     }
     function saveState(){
@@ -442,28 +448,13 @@
       renderMap();
     }
 
-    // ==== UI refs ====
-    const gridEl = document.getElementById("grid");
-    const pointsEl = document.getElementById("points");
-    const progressEl = document.getElementById("progress");
-    const overlay = document.getElementById("overlay");
+    // ==== Réfs DOM (remplies après DOMContentLoaded) ====
+    let gridEl, pointsEl, progressEl, overlay;
+    let lessonTitleEl, lessonMetaEl, storyTextEl, hintTextEl;
+    let qTitleEl, qTextEl, choicesEl, feedbackEl, qCounterEl;
+    let nextBtn, closeBtn, resetBtn;
 
-    const lessonTitleEl = document.getElementById("lessonTitle");
-    const lessonMetaEl  = document.getElementById("lessonMeta");
-    const storyTextEl   = document.getElementById("storyText");
-    const hintTextEl    = document.getElementById("hintText");
-
-    const qTitleEl   = document.getElementById("qTitle");
-    const qTextEl    = document.getElementById("qText");
-    const choicesEl  = document.getElementById("choices");
-    const feedbackEl = document.getElementById("feedback");
-    const qCounterEl = document.getElementById("qCounter");
-
-    const nextBtn  = document.getElementById("nextBtn");
-    const closeBtn = document.getElementById("closeBtn");
-    const resetBtn = document.getElementById("resetBtn");
-
-    // ==== Modal session ====
+    // ==== Session modal ====
     let currentLesson = null;
     let qIndex = 0;
     let locked = false;
@@ -482,6 +473,7 @@
         const card = document.createElement("article");
         card.className = "card";
         card.tabIndex = 0;
+
         card.addEventListener("click", () => openLesson(lesson.id));
         card.addEventListener("keydown", (e) => {
           if(e.key === "Enter" || e.key === " ") openLesson(lesson.id);
@@ -537,12 +529,14 @@
       storyTextEl.textContent = currentLesson.story;
       hintTextEl.textContent = currentLesson.hint;
 
-      overlay.style.display = "flex";
+      // ✅ plus fiable que style.display
+      overlay.classList.add("show");
+
       renderQuestion();
     }
 
     function closeLesson(){
-      overlay.style.display = "none";
+      overlay.classList.remove("show");
       currentLesson = null;
       qIndex = 0;
       locked = false;
@@ -565,13 +559,14 @@
       q.choices.forEach((label, idx) => {
         const btn = document.createElement("button");
         btn.className = "choice";
+        btn.type = "button";
         btn.textContent = label;
-        btn.addEventListener("click", () => choose(idx, btn));
+        btn.addEventListener("click", () => choose(idx));
         choicesEl.appendChild(btn);
       });
     }
 
-    function choose(idx, btnEl){
+    function choose(idx){
       if(locked) return;
       locked = true;
 
@@ -618,25 +613,56 @@
       renderQuestion();
     }
 
-    // ==== Events ====
-    nextBtn.addEventListener("click", next);
-    closeBtn.addEventListener("click", closeLesson);
-    overlay.addEventListener("click", (e) => { if(e.target === overlay) closeLesson(); });
+    function resetAll(){
+      const ok = confirm("Réinitialiser points + progression ?");
+      if(!ok) return;
 
-    resetBtn.addEventListener("click", () => {
-      if(confirm("Réinitialiser points + progression ?")){
-        localStorage.removeItem(storeKey);
-        state.points = 0;
-        state.done = {};
-        state.last = null;
-        renderMap();
-        updateTopUI();
-      }
+      localStorage.removeItem(storeKey);
+      state.points = 0;
+      state.done = {};
+      renderMap();
+      updateTopUI();
+    }
+
+    // ✅ INIT robuste
+    window.addEventListener("DOMContentLoaded", () => {
+      gridEl = document.getElementById("grid");
+      pointsEl = document.getElementById("points");
+      progressEl = document.getElementById("progress");
+      overlay = document.getElementById("overlay");
+
+      lessonTitleEl = document.getElementById("lessonTitle");
+      lessonMetaEl  = document.getElementById("lessonMeta");
+      storyTextEl   = document.getElementById("storyText");
+      hintTextEl    = document.getElementById("hintText");
+
+      qTitleEl   = document.getElementById("qTitle");
+      qTextEl    = document.getElementById("qText");
+      choicesEl  = document.getElementById("choices");
+      feedbackEl = document.getElementById("feedback");
+      qCounterEl = document.getElementById("qCounter");
+
+      nextBtn  = document.getElementById("nextBtn");
+      closeBtn = document.getElementById("closeBtn");
+      resetBtn = document.getElementById("resetBtn");
+
+      nextBtn.addEventListener("click", next);
+      closeBtn.addEventListener("click", closeLesson);
+      resetBtn.addEventListener("click", resetAll);
+
+      // clic sur le fond pour fermer
+      overlay.addEventListener("click", (e) => {
+        if(e.target === overlay) closeLesson();
+      });
+
+      // ESC pour fermer
+      window.addEventListener("keydown", (e) => {
+        if(e.key === "Escape" && overlay.classList.contains("show")) closeLesson();
+      });
+
+      renderMap();
+      updateTopUI();
     });
-
-    // Init
-    renderMap();
-    updateTopUI();
   </script>
 </body>
 </html>
